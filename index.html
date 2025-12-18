@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>不快計算機 超ウザ版 音入り最終完全版</title>
+<style>
+body {
+  font-family: sans-serif;
+  background: #f2f2f2;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  transition: background 0.1s;
+}
+.hidden { display: none !important; }
+
+#calc {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,.2);
+  transition: transform 0.05s;
+}
+#display { width: 100%; font-size: 22px; text-align: right; margin-bottom: 10px; }
+.buttons { display: grid; grid-template-columns: repeat(4, 60px); gap: 5px; }
+button { font-size: 18px; padding: 10px; cursor: pointer; }
+
+#ad, #chaos, #thanks, .miniAd { position: fixed; display: flex; justify-content: center; align-items: center; text-align: center; }
+#ad { inset: 0; background:white; z-index:1000; flex-direction: column; }
+.close-x { position: absolute; top: 10px; right: 15px; font-size: 26px; font-weight: bold; cursor: pointer; user-select:none; }
+
+#chaos { inset:0; background:white; z-index:2000; flex-direction: column; }
+#chaos h2 { margin-bottom: 20px; }
+#chaos input { font-size:18px; padding:5px; margin-top:10px; }
+
+.miniAd {
+  background: yellow; color: black; font-weight: bold; padding:5px; border:2px solid black;
+  width:150px; height:40px; z-index:3000;
+}
+#thanks {
+  position: fixed; inset:0; background:white; z-index:2000; display:flex;
+  justify-content:center; align-items:center; text-align:center; flex-direction: column;
+}
+</style>
+</head>
+<body>
+
+<div id="calc">
+  <input id="display" readonly>
+  <div class="buttons">
+    <button onclick="press('7')">7</button>
+    <button onclick="press('8')">8</button>
+    <button onclick="press('9')">9</button>
+    <button onclick="press('/')">÷</button>
+
+    <button onclick="press('4')">4</button>
+    <button onclick="press('5')">5</button>
+    <button onclick="press('6')">6</button>
+    <button onclick="press('*')">×</button>
+
+    <button onclick="press('1')">1</button>
+    <button onclick="press('2')">2</button>
+    <button onclick="press('3')">3</button>
+    <button onclick="press('-')">−</button>
+
+    <button onclick="press('0')">0</button>
+    <button onclick="clearCalc()">C</button>
+    <button onclick="equals()">=</button>
+    <button onclick="press('+')">+</button>
+  </div>
+</div>
+
+<div id="ad" class="hidden">
+  <div class="close-x" id="closeAd">X</div>
+  <h1>広告</h1>
+  <p></p>
+</div>
+
+<div id="chaos" class="hidden">
+  <h2 id="problem"></h2>
+  <p>残り <span id="time"></span> 秒</p>
+  <input type="text" id="chaosAnswer" placeholder="ここに答えを入力">
+  <button id="submitAnswer">解答</button>
+  <button id="giveup" class="hidden">ギブアップ</button>
+</div>
+
+<script>
+let expr="";
+const display=document.getElementById("display");
+const calc=document.getElementById("calc");
+const ad=document.getElementById("ad");
+const chaosDiv=document.getElementById("chaos");
+const adMessages = ["やりますねぇ","いいよ来いよ","まあまあそんなに興奮しないでください"];
+const sounds=[
+  'https://www.soundjay.com/button/beep-07.wav',
+  'https://www.soundjay.com/button/beep-08b.wav',
+  'https://www.soundjay.com/button/button-3.wav',
+  'https://www.soundjay.com/button/button-10.wav',
+  'https://www.soundjay.com/human/applause-01.wav',
+  'https://www.soundjay.com/human/laugh-01.wav'
+];
+let adClickCount=0, adShown=false, chaosTimer=null, chaosValue=0;
+
+// 計算機ボタン揺れ＋音
+function shakeCalc(){
+  let x=Math.random()*20-10, y=Math.random()*20-10;
+  calc.style.transform=`translate(${x}px,${y}px) rotate(${Math.random()*10-5}deg)`;
+  setTimeout(()=>{ calc.style.transform=""; },100);
+}
+function playRandomSound(){
+  if(Math.random()<0.5){
+    const audio=new Audio(sounds[Math.floor(Math.random()*sounds.length)]);
+    audio.play();
+  }
+}
+function press(v){
+  expr+=v;
+  display.value=expr;
+  shakeCalc();
+  playRandomSound();
+  if(Math.random()<0.3){ expr+=Math.floor(Math.random()*10); display.value=expr; }
+
+  if(!adShown){
+    ad.querySelector("p").textContent = adMessages[Math.floor(Math.random()*adMessages.length)];
+    ad.classList.remove("hidden"); 
+    calc.classList.add("hidden"); 
+    adShown=true; 
+  }
+}
+
+// 計算機クリア
+function clearCalc(){ expr=""; display.value=""; }
+function equals(){ try{ display.value=eval(expr); setTimeout(startChaos,1000);} catch{display.value="error";} }
+
+// 広告X
+document.getElementById("closeAd").onclick=()=>{
+  adClickCount++;
+  if(adClickCount===1){
+    showThanks();
+    window.open("https://x.com","_blank");
+  } else {
+    ad.classList.add("hidden");
+    calc.classList.remove("hidden");
+  }
+}
+
+// カオス計算
+function startChaos(){
+  calc.classList.add("hidden");
+  chaosDiv.classList.remove("hidden");
+  const a=Math.floor(Math.random()*1e9);
+  const b=Math.floor(Math.random()*1e9);
+  chaosValue=a*b/Math.PI;
+  document.getElementById("problem").textContent=`${a} × ${b} ÷ π`;
+  
+  let t=10;
+  const timeSpan=document.getElementById("time");
+  timeSpan.textContent=t;
+
+  chaosTimer=setInterval(()=>{
+    t--;
+    timeSpan.textContent=t;
+
+    // 背景フラッシュ
+    document.body.style.background=`hsl(${Math.random()*360},80%,80%)`;
+
+    // 画面揺れ
+    chaosDiv.style.transform=`rotate(${Math.random()*10-5}deg)`;
+
+    // ミニ広告
+    if(Math.random()<0.5){
+      const mini=document.createElement("div");
+      mini.className="miniAd";
+      mini.style.top=Math.random()*80+"%"; mini.style.left=Math.random()*80+"%";
+      mini.textContent=adMessages[Math.floor(Math.random()*adMessages.length)];
+      document.body.appendChild(mini);
+      setTimeout(()=>mini.remove(),500);
+    }
+
+    // ランダム音
+    if(Math.random()<0.3){ playRandomSound(); }
+
+    // 解答欄数字一瞬変化
+    if(Math.random()<0.2){
+      const inp=document.getElementById("chaosAnswer");
+      const original=inp.value;
+      inp.value+=Math.floor(Math.random()*10);
+      setTimeout(()=>{ inp.value=original; },500);
+    }
+
+    if(t===0){ clearInterval(chaosTimer); document.getElementById("giveup").classList.remove("hidden"); }
+  },200); // 高速ウザ仕様
+}
+
+// 解答ボタン
+document.getElementById("submitAnswer").onclick=()=>{
+  const input=document.getElementById("chaosAnswer").value;
+  if(Number(input)===Number(chaosValue.toFixed(0))){ showThanks(); }
+  else{ alert("違います！ギブアップまで頑張れ！"); }
+}
+
+// ギブアップ
+document.getElementById("giveup").onclick=showThanks;
+
+// thanks表示
+function showThanks(){
+  chaosDiv.classList.add("hidden");
+  ad.classList.add("hidden");
+  clearInterval(chaosTimer);
+
+  const thanks=document.createElement("div");
+  thanks.id="thanks";
+  thanks.innerHTML=`<div class="close-x" id="closeThanks">X</div>
+                    <h1>フォロワーになってくれるの！？<br>ありがとう！！</h1>`;
+  document.body.appendChild(thanks);
+
+  const closeBtn=document.getElementById("closeThanks");
+  closeBtn.addEventListener("mousemove", e=>{
+    closeBtn.style.top=(Math.random()*80)+"%";
+    closeBtn.style.left=(Math.random()*80)+"%";
+  });
+  closeBtn.onclick=()=>{
+    thanks.remove();
+    calc.classList.remove("hidden");
+    expr=""; display.value="";
+  }
+
+  playRandomSound(); // thanks表示時にも音
+  window.open("https://www.instagram.com/","_blank");
+}
+</script>
+
+</body>
+</html>
