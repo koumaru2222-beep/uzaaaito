@@ -2,46 +2,46 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>不快計算機 超ウザ版 音入り最終完全版</title>
+<title>究極不快計算機</title>
 <style>
 body {
   font-family: sans-serif;
-  background: #f2f2f2;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+  background:#f2f2f2;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
   transition: background 0.1s;
 }
-.hidden { display: none !important; }
+.hidden { display:none !important; }
 
 #calc {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,.2);
-  transition: transform 0.05s;
+  background:white;
+  padding:20px;
+  border-radius:8px;
+  box-shadow:0 0 10px rgba(0,0,0,.2);
+  transition: transform 0.05s, font-size 0.1s;
 }
-#display { width: 100%; font-size: 22px; text-align: right; margin-bottom: 10px; }
-.buttons { display: grid; grid-template-columns: repeat(4, 60px); gap: 5px; }
-button { font-size: 18px; padding: 10px; cursor: pointer; }
+#display { width:100%; font-size:22px; text-align:right; margin-bottom:10px; }
+.buttons { display:grid; grid-template-columns:repeat(4,60px); gap:5px; }
+button { font-size:18px; padding:10px; cursor:pointer; transition: transform 0.05s; }
 
-#ad, #chaos, #thanks, .miniAd { position: fixed; display: flex; justify-content: center; align-items: center; text-align: center; }
-#ad { inset: 0; background:white; z-index:1000; flex-direction: column; }
-.close-x { position: absolute; top: 10px; right: 15px; font-size: 26px; font-weight: bold; cursor: pointer; user-select:none; }
+#ad, #chaos, #thanks, .miniAd { position:fixed; display:flex; justify-content:center; align-items:center; text-align:center; }
+#ad { inset:0; background:white; z-index:1000; flex-direction:column; }
+.close-x { position:absolute; top:10px; right:15px; font-size:26px; font-weight:bold; cursor:pointer; user-select:none; }
 
-#chaos { inset:0; background:white; z-index:2000; flex-direction: column; }
-#chaos h2 { margin-bottom: 20px; }
+#chaos { inset:0; background:white; z-index:2000; flex-direction:column; }
+#chaos h2 { margin-bottom:20px; }
 #chaos input { font-size:18px; padding:5px; margin-top:10px; }
 
 .miniAd {
-  background: yellow; color: black; font-weight: bold; padding:5px; border:2px solid black;
+  background:yellow; color:black; font-weight:bold; padding:5px; border:2px solid black;
   width:150px; height:40px; z-index:3000;
 }
 #thanks {
-  position: fixed; inset:0; background:white; z-index:2000; display:flex;
-  justify-content:center; align-items:center; text-align:center; flex-direction: column;
+  position:fixed; inset:0; background:white; z-index:2000; display:flex;
+  justify-content:center; align-items:center; text-align:center; flex-direction:column;
 }
 </style>
 </head>
@@ -92,7 +92,7 @@ const display=document.getElementById("display");
 const calc=document.getElementById("calc");
 const ad=document.getElementById("ad");
 const chaosDiv=document.getElementById("chaos");
-const adMessages = ["やりますねぇ","いいよ来いよ","まあまあそんなに興奮しないでください"];
+const adMessages=["やりますねぇ","いいよ来いよ","まあまあそんなに興奮しないでください"];
 const sounds=[
   'https://www.soundjay.com/button/beep-07.wav',
   'https://www.soundjay.com/button/beep-08b.wav',
@@ -103,50 +103,43 @@ const sounds=[
 ];
 let adClickCount=0, adShown=false, chaosTimer=null, chaosValue=0;
 
-// 計算機ボタン揺れ＋音
-function shakeCalc(){
+// --- ウザ機能 ---
+function shakeCalc(){ // 計算機揺れ
   let x=Math.random()*20-10, y=Math.random()*20-10;
-  calc.style.transform=`translate(${x}px,${y}px) rotate(${Math.random()*10-5}deg)`;
+  calc.style.transform=`translate(${x}px,${y}px) rotate(${Math.random()*10-5}deg) scale(${0.9+Math.random()*0.2})`;
   setTimeout(()=>{ calc.style.transform=""; },100);
 }
-function playRandomSound(){
-  if(Math.random()<0.5){
-    const audio=new Audio(sounds[Math.floor(Math.random()*sounds.length)]);
-    audio.play();
-  }
-}
+function playRandomSound(){ if(Math.random()<0.5){ const audio=new Audio(sounds[Math.floor(Math.random()*sounds.length)]); audio.play(); } }
 function press(v){
   expr+=v;
   display.value=expr;
   shakeCalc();
   playRandomSound();
+
+  // 数字が勝手に変化
   if(Math.random()<0.3){ expr+=Math.floor(Math.random()*10); display.value=expr; }
 
+  // 広告初回表示
   if(!adShown){
     ad.querySelector("p").textContent = adMessages[Math.floor(Math.random()*adMessages.length)];
     ad.classList.remove("hidden"); 
     calc.classList.add("hidden"); 
     adShown=true; 
   }
+  // 入力を一瞬無効化
+  if(Math.random()<0.2){ calc.style.pointerEvents="none"; setTimeout(()=>{calc.style.pointerEvents="auto";},300);}
 }
-
-// 計算機クリア
 function clearCalc(){ expr=""; display.value=""; }
-function equals(){ try{ display.value=eval(expr); setTimeout(startChaos,1000);} catch{display.value="error";} }
+function equals(){ try{ display.value=eval(expr); setTimeout(startChaos,500);} catch{display.value="error";} }
 
-// 広告X
+// --- 広告X ---
 document.getElementById("closeAd").onclick=()=>{
   adClickCount++;
-  if(adClickCount===1){
-    showThanks();
-    window.open("https://x.com","_blank");
-  } else {
-    ad.classList.add("hidden");
-    calc.classList.remove("hidden");
-  }
+  if(adClickCount===1){ showThanks(); window.open("https://x.com","_blank"); }
+  else{ ad.classList.add("hidden"); calc.classList.remove("hidden"); }
 }
 
-// カオス計算
+// --- カオス計算 ---
 function startChaos(){
   calc.classList.add("hidden");
   chaosDiv.classList.remove("hidden");
@@ -163,13 +156,13 @@ function startChaos(){
     t--;
     timeSpan.textContent=t;
 
-    // 背景フラッシュ
-    document.body.style.background=`hsl(${Math.random()*360},80%,80%)`;
+    // 背景チカチカ＋虹色
+    document.body.style.background=`hsl(${Math.random()*360},80%,70%)`;
 
     // 画面揺れ
-    chaosDiv.style.transform=`rotate(${Math.random()*10-5}deg)`;
+    chaosDiv.style.transform=`rotate(${Math.random()*10-5}deg) scale(${0.9+Math.random()*0.2})`;
 
-    // ミニ広告
+    // ミニ広告爆撃
     if(Math.random()<0.5){
       const mini=document.createElement("div");
       mini.className="miniAd";
@@ -179,7 +172,7 @@ function startChaos(){
       setTimeout(()=>mini.remove(),500);
     }
 
-    // ランダム音
+    // カオス中ランダム音連打
     if(Math.random()<0.3){ playRandomSound(); }
 
     // 解答欄数字一瞬変化
@@ -191,20 +184,18 @@ function startChaos(){
     }
 
     if(t===0){ clearInterval(chaosTimer); document.getElementById("giveup").classList.remove("hidden"); }
-  },200); // 高速ウザ仕様
+  },100); // 超高速ウザ仕様
 }
 
-// 解答ボタン
+// --- 解答・ギブアップ ---
 document.getElementById("submitAnswer").onclick=()=>{
   const input=document.getElementById("chaosAnswer").value;
   if(Number(input)===Number(chaosValue.toFixed(0))){ showThanks(); }
   else{ alert("違います！ギブアップまで頑張れ！"); }
 }
-
-// ギブアップ
 document.getElementById("giveup").onclick=showThanks;
 
-// thanks表示
+// --- thanks表示 ---
 function showThanks(){
   chaosDiv.classList.add("hidden");
   ad.classList.add("hidden");
@@ -220,6 +211,8 @@ function showThanks(){
   closeBtn.addEventListener("mousemove", e=>{
     closeBtn.style.top=(Math.random()*80)+"%";
     closeBtn.style.left=(Math.random()*80)+"%";
+    closeBtn.style.transform=`rotate(${Math.random()*20-10}deg) scale(${0.8+Math.random()*0.4})`;
+    playRandomSound(); // 逃げるXボタンでも音
   });
   closeBtn.onclick=()=>{
     thanks.remove();
@@ -227,9 +220,22 @@ function showThanks(){
     expr=""; display.value="";
   }
 
-  playRandomSound(); // thanks表示時にも音
-  window.open("https://x.com/","_blank");
+  playRandomSound(); 
+  window.open("https://www.instagram.com/","_blank");
 }
+
+// --- マウス追尾要素 ---
+document.addEventListener("mousemove", e=>{
+  if(Math.random()<0.05){
+    const mini=document.createElement("div");
+    mini.className="miniAd";
+    mini.style.top=e.clientY+"px";
+    mini.style.left=e.clientX+"px";
+    mini.textContent=adMessages[Math.floor(Math.random()*adMessages.length)];
+    document.body.appendChild(mini);
+    setTimeout(()=>mini.remove(),400);
+  }
+});
 </script>
 
 </body>
